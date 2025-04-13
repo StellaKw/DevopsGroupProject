@@ -50,8 +50,10 @@ stages:
   jobs:
     - job: Deliver
       steps:
-        - download: current
-          artifact: $(artifactName)
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            artifactName: $(artifactName)
+            targetPath: $(Pipeline.Workspace)/$(artifactName)
 
         - script: echo "Artifact ready for deployment."
 
