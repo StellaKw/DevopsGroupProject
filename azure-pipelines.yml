@@ -7,11 +7,10 @@ pool:
   name: Default
 
 variables:
-  - group: SonarQubeVars
+  - group: SonarQubeVars  # Make sure this group contains SONAR_TOKEN as a secret
 
   - name: artifactName
     value: 'angular-app'
-
 
 stages:
 # ----------------- BUILD -----------------
@@ -24,30 +23,20 @@ stages:
         - script: |
             npm install
             ng build --configuration=production --no-progress || true
-          displayName: 'Build Angular App'
-
-        - task: SonarQubePrepare@5
-          inputs:
-            SonarQube: 'sonarqube'  
-            scannerMode: 'CLI'
-            configMode: 'manual'
-            cliProjectKey: 'angular-app'
-            cliSources: 'src'
-            extraProperties: |
-              sonar.token=$(SONAR_TOKEN)
-              sonar.branch.name=
-              sonar.javascript.lcov.reportPaths=coverage/lcov.info
+          displayName: 'Build Angular App (ignore size budget errors)'
 
         - script: |
             npx jest --coverage || true
           displayName: 'Run Jest Unit Tests and Coverage (Force Pass)'
 
-        - task: SonarQubeAnalyze@5
-          displayName: 'Run SonarQube Analysis'
-
-        - task: SonarQubePublish@5
-          inputs:
-            pollingTimeoutSec: '300'
+        - script: |
+            npx sonar-scanner \
+              -Dsonar.projectKey=angular-app \
+              -Dsonar.sources=src \
+              -Dsonar.token=$(SONAR_TOKEN) \
+              -Dsonar.branch.name="" \
+              -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+          displayName: 'Run SonarScanner (manual)'
 
         - task: PublishBuildArtifacts@1
           inputs:
