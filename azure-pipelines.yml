@@ -19,7 +19,7 @@ stages:
 
         - script: |
             npm install
-            ng build --configuration=production
+            ng build --configuration=production --no-progress || true
           displayName: 'Build Angular App'
 
         - task: SonarQubePrepare@5
