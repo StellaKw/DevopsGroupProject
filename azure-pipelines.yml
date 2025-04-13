@@ -4,7 +4,7 @@ trigger:
       - main
 
 pool:
-  name: SelfHosted
+  name: Default
 
 variables:
   artifactName: 'angular-app'
@@ -24,7 +24,7 @@ stages:
 
         - task: SonarQubePrepare@5
           inputs:
-            SonarQube: 'YourSonarQubeServiceConnection'
+            SonarQube: 'sonarqube'
             scannerMode: 'CLI'
             configMode: 'manual'
             cliProjectKey: 'angular-app'
