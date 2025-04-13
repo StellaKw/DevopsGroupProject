@@ -64,9 +64,11 @@ stages:
     - job: DeployDev
       steps:
         - script: |
-            echo "Deploying to Dev environment on port 4200"
-            # Replace with real deploy logic
-
+            npm install -g http-server
+            http-server $(Pipeline.Workspace)/$(artifactName) -p 4200 &
+            sleep 5
+            echo "✅ Angular app deployed at http://localhost:4200"
+          displayName: 'Start Angular App on Port 4200'
 # ----------------- DEPLOY TO QAT -----------------
 - stage: Deploy_QAT
   dependsOn: Deploy_Dev
