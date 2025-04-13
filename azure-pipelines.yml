@@ -1,0 +1,98 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  name: SelfHosted
+
+variables:
+  artifactName: 'angular-app'
+
+stages:
+# ----------------- BUILD -----------------
+- stage: Build
+  jobs:
+    - job: BuildAngular
+      steps:
+        - checkout: self
+
+        - script: |
+            npm install
+            ng build --configuration=production
+          displayName: 'Build Angular App'
+
+        - task: SonarQubePrepare@5
+          inputs:
+            SonarQube: 'YourSonarQubeServiceConnection'
+            scannerMode: 'CLI'
+            configMode: 'manual'
+            cliProjectKey: 'angular-app'
+            cliSources: 'src'
+            extraProperties: |
+              sonar.javascript.lcov.reportPaths=coverage/lcov.info
+
+        - script: |
+            npx jest --coverage
+          displayName: 'Run Jest Unit Tests and Coverage'
+
+        - task: SonarQubeAnalyze@5
+          displayName: 'Run SonarQube Analysis'
+
+        - task: SonarQubePublish@5
+          inputs:
+            pollingTimeoutSec: '300'
+
+        - task: PublishBuildArtifacts@1
+          inputs:
+            PathtoPublish: 'dist'
+            ArtifactName: '$(artifactName)'
+            publishLocation: 'Container'
+
+# ----------------- DELIVER -----------------
+- stage: Deliver
+  dependsOn: Build
+  jobs:
+    - job: Deliver
+      steps:
+        - download: current
+          artifact: $(artifactName)
+
+        - script: echo "Artifact ready for deployment."
+
+# ----------------- DEPLOY TO DEV -----------------
+- stage: Deploy_Dev
+  dependsOn: Deliver
+  jobs:
+    - job: DeployDev
+      steps:
+        - script: |
+            echo "Deploying to Dev environment on port 4200"
+            # Replace with real deploy logic
+
+# ----------------- DEPLOY TO QAT -----------------
+- stage: Deploy_QAT
+  dependsOn: Deploy_Dev
+  jobs:
+    - job: DeployQAT
+      steps:
+        - script: |
+            echo "Mock QAT deployment step."
+
+# ----------------- DEPLOY TO STAGING -----------------
+- stage: Deploy_Staging
+  dependsOn: Deploy_QAT
+  jobs:
+    - job: DeployStaging
+      steps:
+        - script: |
+            echo "Mock Staging deployment step."
+
+# ----------------- DEPLOY TO PROD -----------------
+- stage: Deploy_Prod
+  dependsOn: Deploy_Staging
+  jobs:
+    - job: DeployProd
+      steps:
+        - script: |
+            echo "Mock Production deployment step."
